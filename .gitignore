@@ -1,0 +1,9 @@
+Intermedia.txt
+lex.yy.c
+y.tab.c
+y.tab.h
+*.exe
+*.output
+*.obj
+*.asm
+ts.txt

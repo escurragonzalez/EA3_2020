@@ -283,7 +283,8 @@ void generarAsm(){
 	//Auxiliares
 	insertarEnTabla(0);
 	insertarEnTabla(1);
-	agregarEnTabla("_pos",0);
+	agregarEnTabla("_posf",0);
+	agregarEnTabla("_cont",0);
 	agregarEnTabla("_flag",0);	
 	FILE *pf = fopen("Final.asm", "w+");
 	if (!pf){
@@ -319,10 +320,6 @@ void generarAsm(){
 	recorrerTercetos(pf);
 
 	fprintf(pf,"\tmov ah, 4ch\n\tint 21h\n\n");
-
-//	fprintf(pf,"\nstrlen proc\n\tmov bx, 0\n\tstrl01:\n\tcmp BYTE PTR [si+bx],'$'\n\tje strend\n\tinc bx\n\tjmp strl01\n\tstrend:\n\tret\nstrlen endp\n");
-//	fprintf(pf,"\ncopiar proc\n\tcall strlen\n\tcmp bx , MAXTEXTSIZE\n\tjle copiarSizeOk\n\tmov bx , MAXTEXTSIZE\n\tcopiarSizeOk:\n\tmov cx , bx\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\ncopiar endp\n");
-//	fprintf(pf,"\nconcat proc\n\tpush ds\n\tpush si\n\tcall strlen\n\tmov dx , bx\n\tmov si , di\n\tpush es\n\tpop ds\n\tcall strlen\n\tadd di, bx\n\tadd bx, dx\n\tcmp bx , MAXTEXTSIZE\n\tjg concatSizeMal\n\tconcatSizeOk:\n\tmov cx , dx\n\tjmp concatSigo\n\tconcatSizeMal:\n\tsub bx , MAXTEXTSIZE\n\tsub dx , bx\n\tmov cx , dx\n\tconcatSigo:\n\tpush ds\n\tpop es\n\tpop si\n\tpop ds\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\nconcat endp\n");
 
 	//Fin archivo
 	fprintf(pf, "\nEND");
@@ -380,11 +377,10 @@ void recorrerTercetos(FILE *pf){
 			//Asignacion 
 		if(strcmp(nodo,"=")==0 ){
 			sprintf(aux_str,"%s",tercetos[atoi(tercetos[i].tres)].uno);
-			//Solo si no es lista vacia hago la asignacion
-			if(strcmp(aux_str,"-2")!=0){
-				fprintf(pf,"\tfild \t@_%s\n",aux_str);
-				fprintf(pf,"\tfistp \t@_%s\n",tercetos[atoi(tercetos[i].dos)].uno);
-			}
+			
+			fprintf(pf,"\tfild \t@_%s\n",aux_str);
+			fprintf(pf,"\tfistp \t@_%s\n",tercetos[atoi(tercetos[i].dos)].uno);
+		
 		}
 
 		if(strcmp(nodo,"BNE")==0 ){
@@ -407,7 +403,7 @@ void recorrerTercetos(FILE *pf){
 		}
 
 		if(strcmp(nodo,"MENSAJE")==0){
-			fprintf(pf,"\tdisplayString \t @mensajeNoEncontrado\n");
+			fprintf(pf,"\tdisplayString \t %s\n",tercetos[i].dos);
 		}
 	}
 }

@@ -27,6 +27,8 @@ int posicionIdx;
 int listaIdx;
 int posIdx;
 int resultIdx;
+int flagIdx;
+
 
 %}
 
@@ -67,12 +69,17 @@ read : READ ID    {
                   }
 asig : ID ASIGNA posicion     {
                                     agregarEnTabla($1,yylineno);
-                                    crearTercetoIdx("BEQ",crearTerceto("0"),posicionIdx);
-                                    asigIdx=crearTercetoIdx("=",crearTerceto($1),posicionIdx);
-                                    crearTerceto("SEGUIR");
-                                    crearTercetoIdx("BNE",crearTerceto("0"),posicionIdx);
-                                    crearTerceto("MENSAJE");//Elemnto no encontrado
-                                    crearTerceto("SEGUIR");
+                                    if(posicionIdx==-1){
+                                          crearTercetoSimple("MENSAJE","@mensajeListavacia",CteString);
+                                    }
+                                    else{
+                                          crearTercetoIdx("BEQ",crearTerceto("0"),posicionIdx);
+                                          asigIdx=crearTercetoIdx("=",crearTerceto($1),posicionIdx);
+                                          crearTerceto("SEGUIR");
+                                          crearTercetoIdx("BNE",crearTerceto("0"),posicionIdx);
+                                          crearTercetoSimple("MENSAJE","@mensajeNoEncontrado",CteString);//Elemnto no encontrado
+                                          crearTerceto("SEGUIR");
+                                    }
                               }
 
 posicion : POSICION PARA ID PYC CA  {
@@ -84,17 +91,20 @@ posicion : POSICION PARA ID PYC CA  {
                               }
       | POSICION PARA ID PYC CA CC PARC
                               {
-                                    posicionIdx=crearTerceto("-2");
+                                    posicionIdx=-1;
                               }
 
 lista : CTE             {
                               agregarCteATabla(Cte);pos=1;
-                              posIdx=crearTercetoIdx("=",crearTerceto("_pos"),crearTerceto("0"));//posicion encontrada del elemnto
+                              flagIdx = crearTerceto("_flag");
+                              crearTercetoIdx("=",flagIdx,crearTerceto("0"));//Flag 
+                              crearTercetoIdx("=",crearTerceto("_cont"),crearTerceto("0"));//cont
+                              posIdx=crearTercetoIdx("=",crearTerceto("_posf"),crearTerceto("0"));//posicion encontrada del elemento
                               sprintf(str_aux,"%d",$1);
                               crearTercetoIdx("BNE",crearTerceto(str_aux),posicionIdx);
-                              listaIdx=crearTerceto("_pos");
+                              listaIdx=crearTerceto("_posf");
                               crearTercetoIdx("=",listaIdx,crearTerceto("1"));//posicion Encontrado 
-                              crearTercetoIdx("=",crearTerceto("_flag"),crearTerceto("1"));//Flag Encontrado 
+                              crearTercetoIdx("=",flagIdx,crearTerceto("1"));//Flag Encontrado 
                               crearTerceto("SEGUIR");
                         }
       | lista COMA CTE  {

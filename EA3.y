@@ -15,7 +15,7 @@ char str_aux[100];
 /* Cosas para la declaracion de variables y la tabla de simbolos */
 int tipoDatoADeclarar[TAMANIO_TABLA];
 int indice_tabla = -1;
-int pos;
+int cont=0;
 
 FILE  *yyin;
 
@@ -75,10 +75,10 @@ asig : ID ASIGNA posicion     {
                                     else{
                                           crearTercetoIdx("BEQ",crearTerceto("0"),posicionIdx);
                                           asigIdx=crearTercetoIdx("=",crearTerceto($1),posicionIdx);
-                                          crearTerceto("SEGUIR");
+                                          crearTerceto("FIN_IF");
                                           crearTercetoIdx("BNE",crearTerceto("0"),posicionIdx);
                                           crearTercetoSimple("MENSAJE","@mensajeNoEncontrado",CteString);//Elemnto no encontrado
-                                          crearTerceto("SEGUIR");
+                                          crearTerceto("FIN_IF");
                                     }
                               }
 
@@ -95,22 +95,30 @@ posicion : POSICION PARA ID PYC CA  {
                               }
 
 lista : CTE             {
-                              agregarCteATabla(Cte);pos=1;
+                              agregarCteATabla(Cte);cont++;
                               flagIdx = crearTerceto("_flag");
                               crearTercetoIdx("=",flagIdx,crearTerceto("0"));//Flag 
-                              crearTercetoIdx("=",crearTerceto("_cont"),crearTerceto("0"));//cont
+                              crearTercetoIdx("=",crearTerceto("_cont"),crearTerceto("1"));//cont
                               posIdx=crearTercetoIdx("=",crearTerceto("_posf"),crearTerceto("0"));//posicion encontrada del elemento
                               sprintf(str_aux,"%d",$1);
                               crearTercetoIdx("BNE",crearTerceto(str_aux),posicionIdx);
                               listaIdx=crearTerceto("_posf");
                               crearTercetoIdx("=",listaIdx,crearTerceto("1"));//posicion Encontrado 
                               crearTercetoIdx("=",flagIdx,crearTerceto("1"));//Flag Encontrado 
-                              crearTerceto("SEGUIR");
+                              crearTerceto("FIN_IF");
                         }
       | lista COMA CTE  {
-                              agregarCteATabla(Cte);pos++;
+                              agregarCteATabla(Cte);cont++;
                               sprintf(str_aux,"%d",$3);
-                              listaIdx=crearTerceto(str_aux);
+                              crearTercetoIdx("BNE",crearTerceto(str_aux),posicionIdx);
+                              crearTercetoIdx("BNE",crearTerceto("0"),flagIdx);
+                              crearTercetoIdx("=",flagIdx,crearTerceto("1"));//Flag Encontrado
+                              listaIdx=crearTerceto("_posf");
+                              sprintf(str_aux,"%d",cont);
+                              insertarEnTabla(cont);
+                              crearTercetoIdx("=",listaIdx,crearTerceto(str_aux));//posicion Encontrado 
+                              crearTerceto("FIN_IF");
+                              crearTerceto("FIN_IF");
                         }
 
 write : WRITE CTE_S     {

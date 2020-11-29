@@ -361,11 +361,11 @@ void recorrerTercetos(FILE *pf){
 			fprintf(pf,"\tfild \t@_0\n");
 			fprintf(pf,"\tfild \t@_%s\n",tercetos[i].dos);
 			fprintf(pf,"\tfcomp \n\tfstsw ax\n \tfwait \n\tsahf \n");
-			fprintf(pf,"\tja SEGUIR%d \n",ccond);
+			fprintf(pf,"\tja FIN_IF%d \n",ccond);
 			fprintf(pf,"\tBLOQ%d: \n",ccond);
 			fprintf(pf,"\tdisplayString \t @mensajeValidacion\n");
 			fprintf(pf,"\tmov ah, 4ch\n\tint 21h\n\n");
-			fprintf(pf,"\tSEGUIR%d: \n",ccond);
+			fprintf(pf,"\tFIN_IF%d: \n",ccond);
 			ccond++;
 		}
 
@@ -387,19 +387,19 @@ void recorrerTercetos(FILE *pf){
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].dos)].uno);
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].tres)].uno);
 			fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tjne\t\t");
-			fprintf(pf,"SEGUIR%d\n",ccond);
+			fprintf(pf,"FIN_IF%d\n",ccond);
 		}
 
 		if(strcmp(nodo,"BEQ")==0 ){
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].dos)].uno);
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].tres)].uno);
 			fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tje\t\t");
-			fprintf(pf,"SEGUIR%d\n",ccond);
+			fprintf(pf,"FIN_IF%d\n",ccond);
 		}
 
 		//ETIQUETAS
-		if(strcmp(nodo,"SEGUIR")==0){
-			fprintf(pf,"\tSEGUIR%d:\n",ccond);ccond++;
+		if(strcmp(nodo,"FIN_IF")==0){
+			fprintf(pf,"\tFIN_IF%d:\n",ccond);ccond++;
 		}
 
 		if(strcmp(nodo,"MENSAJE")==0){

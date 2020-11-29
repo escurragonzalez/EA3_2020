@@ -217,10 +217,11 @@ int crearTercetoIdx(char *uno, int dos, int tres) {
 		terc.dos = malloc(sizeof(char)*strlen("_"));
 		strcpy(terc.dos, "_");	
 	}
+
 	if(tres!=-1){
 		char *tres_char = (char*) malloc(sizeof(int));
 		itoa(tres, tres_char, 10);
-		terc.dos = malloc(sizeof(char)*strlen(tres_char));
+		terc.tres = malloc(sizeof(char)*strlen(tres_char));
 		strcpy(terc.tres, tres_char);
 	}else{
 		terc.tres = malloc(sizeof(char)*strlen("_"));
@@ -279,7 +280,11 @@ insertarEnTabla(int constante){
 void generarAsm(){	
       
 	int i;//Contador for
+	//Auxiliares
 	insertarEnTabla(0);
+	insertarEnTabla(1);
+	agregarEnTabla("_pos",0);
+	agregarEnTabla("_flag",0);	
 	FILE *pf = fopen("Final.asm", "w+");
 	if (!pf){
 		printf("Error al guardar el archivo assembler.\n");
@@ -306,19 +311,17 @@ void generarAsm(){
 				break;
 			}
 	}
-	fprintf(pf,"\t@mensajeValidacion \tDB \"El valor debe ser >=1\",'$',%d dup(?)\n",50-21);
+	fprintf(pf,"\t@mensajeValidacion \tDB \"El valor debe ser >=1\",'$',29 dup(?)\n");
+	fprintf(pf,"\t@mensajeListavacia \tDB \"La lista esta vacia\",'$',31 dup(?)\n");
 
-	
-	//Auxiliares
-	for(i=0;i<auxOperaciones;i++){
-		fprintf(pf,"\t@_auxR%d \tDD 0.0\n",i);
-		fprintf(pf,"\t@_auxE%d \tDW 0\n",i);
-	}
-
-	fprintf(pf,"\n.CODE\n.startup\n\tmov AX,@DATA\n\tmov DS,AX\n\n\tFINIT\n\n");
+	fprintf(pf,"\n.CODE\n.startup\n\tmov AX,@DATA\n\tmov DS,AX\n\n\tFINIT\n");
 	recorrerTercetos(pf);
 
 	fprintf(pf,"\tmov ah, 4ch\n\tint 21h\n\n");
+
+	fprintf(pf,"\nstrlen proc\n\tmov bx, 0\n\tstrl01:\n\tcmp BYTE PTR [si+bx],'$'\n\tje strend\n\tinc bx\n\tjmp strl01\n\tstrend:\n\tret\nstrlen endp\n");
+	fprintf(pf,"\ncopiar proc\n\tcall strlen\n\tcmp bx , MAXTEXTSIZE\n\tjle copiarSizeOk\n\tmov bx , MAXTEXTSIZE\n\tcopiarSizeOk:\n\tmov cx , bx\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\ncopiar endp\n");
+	fprintf(pf,"\nconcat proc\n\tpush ds\n\tpush si\n\tcall strlen\n\tmov dx , bx\n\tmov si , di\n\tpush es\n\tpop ds\n\tcall strlen\n\tadd di, bx\n\tadd bx, dx\n\tcmp bx , MAXTEXTSIZE\n\tjg concatSizeMal\n\tconcatSizeOk:\n\tmov cx , dx\n\tjmp concatSigo\n\tconcatSizeMal:\n\tsub bx , MAXTEXTSIZE\n\tsub dx , bx\n\tmov cx , dx\n\tconcatSigo:\n\tpush ds\n\tpop es\n\tpop si\n\tpop ds\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\nconcat endp\n");
 
 	//Fin archivo
 	fprintf(pf, "\nEND");
@@ -334,13 +337,13 @@ void recorrerTercetos(FILE *pf){
 	int nroAuxReal=0;
 	int ccond=0;
 	char aux1[50]="aux\0";
-	char aux2[10];
+	char nodo[50];
 	for(i = 0; i < terceto_idx; i++){
 	//Variables y Constantes
-		sprintf(aux_str,"%s",tercetos[i].uno);
+		sprintf(nodo,"%s",tercetos[i].uno);
 	
 		//WRITE
-		if(strcmp(aux_str,"WRITE")==0){
+		if(strcmp(nodo,"WRITE")==0){
 			switch(tercetos[i].tipoDato){
 				case Int:
 				case Cte:
@@ -348,51 +351,55 @@ void recorrerTercetos(FILE *pf){
 				break;
 				case CteString:
 					strcpy(aux_str,normalizarNombre(tercetos[i].dos));
-					fprintf(pf,"\tdisplayString \t@%s\n\tnewLine 1\n",aux_str);
+					fprintf(pf,"\tnewLine 1\n\tdisplayString \t@%s\n\tnewLine 1\n",aux_str);
 				break;
 			}
 		}
 
 		//READ
-		if(strcmp(aux_str,"READ")==0){
+		if(strcmp(nodo,"READ")==0){
 			fprintf(pf,"\tGetInteger \t@_%s\n",tercetos[i].dos);
 			fprintf(pf,"\tCONDICION%d: \n",ccond);	
 			fprintf(pf,"\tfild \t@_0\n");
 			fprintf(pf,"\tfild \t@_%s\n",tercetos[i].dos);
-			fprintf(pf,"\tfcomp \nfstsw	ax\n fwait \nsahf \n");
+			fprintf(pf,"\tfcomp \n\tfstsw ax\n \tfwait \n\tsahf \n");
 			fprintf(pf,"\tja SEGUIR%d \n",ccond);
 			fprintf(pf,"\tBLOQ%d: \n",ccond);
 			fprintf(pf,"\tdisplayString \t @mensajeValidacion\n");
-			fprintf(pf,"\t \tmov ah, 4ch\n\tint 21h\n\n");
+			fprintf(pf,"\tmov ah, 4ch\n\tint 21h\n\n");
 			fprintf(pf,"\tSEGUIR%d: \n",ccond);
 			ccond++;
+		}
+
+		//Lista Vacia
+		if(strcmp(nodo,"-2")==0){
+			fprintf(pf,"\tdisplayString \t @mensajeListavacia\n");
+		}
+
+			//Asignacion 
+		if(strcmp(nodo,"=")==0 ){
+			sprintf(aux_str,"%s",tercetos[atoi(tercetos[i].tres)].uno);
+			//Solo si no es lista vacia hago la asignacion
+			if(strcmp(aux_str,"-2")!=0){
+				fprintf(pf,"\tfild \t@_%s\n",aux_str);
+				fprintf(pf,"\tfistp \t@_%s\n",tercetos[atoi(tercetos[i].dos)].uno);
+			}
+		}
+
+		if(strcmp(nodo,"BNE")==0 ){
+			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].dos)].uno);
+			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].tres)].uno);
+			fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tjne\t\t");
+			fprintf(pf,"SEGUIR%d\n",ccond);
+		}
+
+		//ETIQUETAS
+		if(strcmp(nodo,"SEGUIR")==0){
+			fprintf(pf,"\tSEGUIR%d:\n",ccond);ccond++;
 		}
 	}
 }
 /*
-	//Asignacion 
-	if(strcmp(aux_str,"DOS_PUNTOS")==0 ){
-		auxPtr = topedePila(pilaAsm);
-		switch(auxPtr->info.tipoDato){
-			case Cte:
-				fprintf(pf,"\tfild \t@%s\n",auxPtr->info.dato);
-				sacardePila(pilaAsm);
-				auxPtr = topedePila(pilaAsm);
-				fprintf(pf,"\tfistp \t@%s\n",auxPtr->info.dato);
-			break;
-			case CteString:
-				fprintf(pf,"\tmov ax, @DATA\n\tmov ds, ax\n\tmov es, ax\n");
-				fprintf(pf,"\tmov si, OFFSET\t@%s\n", auxPtr->info.dato);
-				sacardePila(pilaAsm);
-				auxPtr = topedePila(pilaAsm);
-				fprintf(pf,"\tmov di, OFFSET\t@%s\n",auxPtr->info.dato);
-				fprintf(pf,"\tcall copiar\n");
-			break;
-		}
-		sacardePila(pilaAsm);
-	}
-
-
 	if(strcmp(aux_str,"CMP")==0){
 		auxPtr = topedePila(pilaAsm);
 		switch(auxPtr->info.tipoDato){

@@ -15,13 +15,19 @@ char str_aux[100];
 /* Cosas para la declaracion de variables y la tabla de simbolos */
 int tipoDatoADeclarar[TAMANIO_TABLA];
 int indice_tabla = -1;
-int auxOperaciones=0;
+int pos;
 
 FILE  *yyin;
 
 //Indices tercetos
 int IdxWrite;
 int IdxRead;
+int asigIdx;
+int posicionIdx;
+int listaIdx;
+int posIdx;
+int resultIdx;
+
 %}
 
 %union {
@@ -60,17 +66,36 @@ read : READ ID    {
 				crearTercetoSimple("READ",$2,Int); 
                   }
 asig : ID ASIGNA posicion     {
-                                    agregarEnTabla($1,yylineno);                                    
+                                    agregarEnTabla($1,yylineno);
+                                    asigIdx=crearTercetoIdx("=",crearTerceto($1),posicionIdx);
                               }
 
-posicion : POSICION PARA ID PYC CA lista CC PARC
+posicion : POSICION PARA ID PYC CA  {
+                                          posicionIdx=crearTerceto($3);
+                                    }
+            lista CC PARC
+                              {
+                                    posicionIdx=listaIdx;
+                              }
       | POSICION PARA ID PYC CA CC PARC
+                              {
+                                    posicionIdx=crearTerceto("-2");
+                              }
 
 lista : CTE             {
-                              agregarCteATabla(Cte);
+                              agregarCteATabla(Cte);pos=1;
+                              posIdx=crearTercetoIdx("=",crearTerceto("_pos"),crearTerceto("0"));//posicion encontrada del elemnto
+                              sprintf(str_aux,"%d",$1);
+                              crearTercetoIdx("BNE",crearTerceto(str_aux),posicionIdx);
+                              listaIdx=crearTerceto("_pos");
+                              crearTercetoIdx("=",listaIdx,crearTerceto("1"));//posicion Encontrado 
+                              crearTercetoIdx("=",crearTerceto("_flag"),crearTerceto("1"));//Flag Encontrado 
+                              crearTerceto("SEGUIR");
                         }
       | lista COMA CTE  {
-                              agregarCteATabla(Cte);
+                              agregarCteATabla(Cte);pos++;
+                              sprintf(str_aux,"%d",$3);
+                              listaIdx=crearTerceto(str_aux);
                         }
 
 write : WRITE CTE_S     {
@@ -78,6 +103,7 @@ write : WRITE CTE_S     {
 					crearTercetoSimple("WRITE",$2,CteString); 
                         }
       | WRITE ID        {
+                              agregarEnTabla(yylval.valor_string,yylineno);
 					crearTercetoSimple("WRITE",$2,Int); 
                         }
 

@@ -67,7 +67,12 @@ read : READ ID    {
                   }
 asig : ID ASIGNA posicion     {
                                     agregarEnTabla($1,yylineno);
+                                    crearTercetoIdx("BEQ",crearTerceto("0"),posicionIdx);
                                     asigIdx=crearTercetoIdx("=",crearTerceto($1),posicionIdx);
+                                    crearTerceto("SEGUIR");
+                                    crearTercetoIdx("BNE",crearTerceto("0"),posicionIdx);
+                                    crearTerceto("MENSAJE");//Elemnto no encontrado
+                                    crearTerceto("SEGUIR");
                               }
 
 posicion : POSICION PARA ID PYC CA  {

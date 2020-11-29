@@ -313,15 +313,16 @@ void generarAsm(){
 	}
 	fprintf(pf,"\t@mensajeValidacion \tDB \"El valor debe ser >=1\",'$',29 dup(?)\n");
 	fprintf(pf,"\t@mensajeListavacia \tDB \"La lista esta vacia\",'$',31 dup(?)\n");
+	fprintf(pf,"\t@mensajeNoEncontrado \tDB \"Elemento no encontrado\",'$',28 dup(?)\n");
 
 	fprintf(pf,"\n.CODE\n.startup\n\tmov AX,@DATA\n\tmov DS,AX\n\n\tFINIT\n");
 	recorrerTercetos(pf);
 
 	fprintf(pf,"\tmov ah, 4ch\n\tint 21h\n\n");
 
-	fprintf(pf,"\nstrlen proc\n\tmov bx, 0\n\tstrl01:\n\tcmp BYTE PTR [si+bx],'$'\n\tje strend\n\tinc bx\n\tjmp strl01\n\tstrend:\n\tret\nstrlen endp\n");
-	fprintf(pf,"\ncopiar proc\n\tcall strlen\n\tcmp bx , MAXTEXTSIZE\n\tjle copiarSizeOk\n\tmov bx , MAXTEXTSIZE\n\tcopiarSizeOk:\n\tmov cx , bx\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\ncopiar endp\n");
-	fprintf(pf,"\nconcat proc\n\tpush ds\n\tpush si\n\tcall strlen\n\tmov dx , bx\n\tmov si , di\n\tpush es\n\tpop ds\n\tcall strlen\n\tadd di, bx\n\tadd bx, dx\n\tcmp bx , MAXTEXTSIZE\n\tjg concatSizeMal\n\tconcatSizeOk:\n\tmov cx , dx\n\tjmp concatSigo\n\tconcatSizeMal:\n\tsub bx , MAXTEXTSIZE\n\tsub dx , bx\n\tmov cx , dx\n\tconcatSigo:\n\tpush ds\n\tpop es\n\tpop si\n\tpop ds\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\nconcat endp\n");
+//	fprintf(pf,"\nstrlen proc\n\tmov bx, 0\n\tstrl01:\n\tcmp BYTE PTR [si+bx],'$'\n\tje strend\n\tinc bx\n\tjmp strl01\n\tstrend:\n\tret\nstrlen endp\n");
+//	fprintf(pf,"\ncopiar proc\n\tcall strlen\n\tcmp bx , MAXTEXTSIZE\n\tjle copiarSizeOk\n\tmov bx , MAXTEXTSIZE\n\tcopiarSizeOk:\n\tmov cx , bx\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\ncopiar endp\n");
+//	fprintf(pf,"\nconcat proc\n\tpush ds\n\tpush si\n\tcall strlen\n\tmov dx , bx\n\tmov si , di\n\tpush es\n\tpop ds\n\tcall strlen\n\tadd di, bx\n\tadd bx, dx\n\tcmp bx , MAXTEXTSIZE\n\tjg concatSizeMal\n\tconcatSizeOk:\n\tmov cx , dx\n\tjmp concatSigo\n\tconcatSizeMal:\n\tsub bx , MAXTEXTSIZE\n\tsub dx , bx\n\tmov cx , dx\n\tconcatSigo:\n\tpush ds\n\tpop es\n\tpop si\n\tpop ds\n\tcld\n\trep movsb\n\tmov al , '$'\n\tmov byte ptr[di],al\n\tret\nconcat endp\n");
 
 	//Fin archivo
 	fprintf(pf, "\nEND");
@@ -393,68 +394,20 @@ void recorrerTercetos(FILE *pf){
 			fprintf(pf,"SEGUIR%d\n",ccond);
 		}
 
+		if(strcmp(nodo,"BEQ")==0 ){
+			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].dos)].uno);
+			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].tres)].uno);
+			fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tje\t\t");
+			fprintf(pf,"SEGUIR%d\n",ccond);
+		}
+
 		//ETIQUETAS
 		if(strcmp(nodo,"SEGUIR")==0){
 			fprintf(pf,"\tSEGUIR%d:\n",ccond);ccond++;
 		}
+
+		if(strcmp(nodo,"MENSAJE")==0){
+			fprintf(pf,"\tdisplayString \t @mensajeNoEncontrado\n");
+		}
 	}
 }
-/*
-	if(strcmp(aux_str,"CMP")==0){
-		auxPtr = topedePila(pilaAsm);
-		switch(auxPtr->info.tipoDato){
-			case Integer:
-			case CteInt:
-				fprintf(pf,"\tfild \t@%s\n", auxPtr->info.dato);
-				sacardePila(pilaAsm);
-				auxPtr = topedePila(pilaAsm);
-				fprintf(pf,"\tfild \t@%s\n", auxPtr->info.dato);
-			break;
-			case Float:
-			case CteFloat:
-				fprintf(pf,"\tfld \t@%s\n", auxPtr->info.dato);
-				sacardePila(pilaAsm);
-				auxPtr = topedePila(pilaAsm);
-				fprintf(pf,"\tfild \t@%s\n", auxPtr->info.dato);
-			break;
-		}
-		sacardePila(pilaAsm);
-	}
-
-	// >
-	if(strcmp(aux_str,"BLE")==0){
-		fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tjbe\t\t");
-	}
-
-	//<
-	if(strcmp(aux_str,"BGE")==0){
-		fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tjae\t\t");
-	}
-
-	//!=
-	if(strcmp(aux_str,"BEQ")==0){
-		fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tje\t\t");
-	}
-
-	//==
-	if(strcmp(aux_str,"BNE")==0){
-		fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tjne\t\t");
-	}
-
-	//>=
-	if(strcmp(aux_str,"BLT")==0){
-		fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tjb\t\t");
-	}
-
-	//<=
-	if(strcmp(aux_str,"BGT")==0){
-		fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tja\t\t");
-	}
-
-	//ETIQUETAS
-	if(strchr(aux_str, '#')!=NULL){
-		memmove(&aux_str[0], &aux_str[1], strlen(aux_str));//Remover el primer caracter "#"
-		fprintf(pf,"%s\n",aux_str);
-	}
-	}
-}*/

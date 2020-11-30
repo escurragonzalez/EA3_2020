@@ -305,12 +305,15 @@ void generarAsm(){
 			case Cte:
 				fprintf(pf,"\t@%s \tDW %d\n",tabla_simbolo[i].nombre,tabla_simbolo[i].valor_i);
 				break;
-			case CteString:
-				fprintf(pf,"\t@%s \tDB \"%s\",'$',%d dup(?)\n",tabla_simbolo[i].nombre,tabla_simbolo[i].valor_s,50-tabla_simbolo[i].longitud);
-				break;
 			default:
 				break;
 			}
+	}
+
+	for (i = 0; i <= indice_tabla; i++){
+		if(tabla_simbolo[i].tipo_dato ==CteString){
+			fprintf(pf,"\t@%s \tDB \"%s\",'$',%d dup(?)\n",tabla_simbolo[i].nombre,tabla_simbolo[i].valor_s,50-tabla_simbolo[i].longitud);
+		}
 	}
 	fprintf(pf,"\t@mensajeValidacion \tDB \"El valor debe ser >=1\",'$',29 dup(?)\n");
 	fprintf(pf,"\t@mensajeListavacia \tDB \"La lista esta vacia\",'$',31 dup(?)\n");
@@ -357,7 +360,6 @@ void recorrerTercetos(FILE *pf){
 		//READ
 		if(strcmp(nodo,"READ")==0){
 			fprintf(pf,"\tGetInteger \t@_%s\n",tercetos[i].dos);
-			fprintf(pf,"\tCONDICION%d: \n",ccond);	
 			fprintf(pf,"\tfild \t@_0\n");
 			fprintf(pf,"\tfild \t@_%s\n",tercetos[i].dos);
 			fprintf(pf,"\tfcomp \n\tfstsw ax\n \tfwait \n\tsahf \n");
@@ -369,18 +371,12 @@ void recorrerTercetos(FILE *pf){
 			ccond++;
 		}
 
-		//Lista Vacia
-		if(strcmp(nodo,"-2")==0){
-			fprintf(pf,"\tdisplayString \t @mensajeListavacia\n");
-		}
-
-			//Asignacion 
+		//Asignacion 
 		if(strcmp(nodo,"=")==0 ){
+			fprintf(pf,"\tffree\n");
 			sprintf(aux_str,"%s",tercetos[atoi(tercetos[i].tres)].uno);
-			
 			fprintf(pf,"\tfild \t@_%s\n",aux_str);
 			fprintf(pf,"\tfistp \t@_%s\n",tercetos[atoi(tercetos[i].dos)].uno);
-		
 		}
 
 		if(strcmp(nodo,"BNE")==0 ){

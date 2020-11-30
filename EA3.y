@@ -73,10 +73,10 @@ asig : ID ASIGNA posicion     {
                                           crearTercetoSimple("MENSAJE","@mensajeListavacia",CteString);
                                     }
                                     else{
-                                          crearTercetoIdx("BEQ",crearTerceto("0"),posicionIdx);
-                                          asigIdx=crearTercetoIdx("=",crearTerceto($1),posicionIdx);
+                                          crearTercetoIdx("BNE",crearTerceto("1"),flagIdx);
+                                          asigIdx=crearTercetoIdx("=",crearTerceto($1),listaIdx);
                                           crearTerceto("FIN_IF");
-                                          crearTercetoIdx("BNE",crearTerceto("0"),posicionIdx);
+                                          crearTercetoIdx("BNE",crearTerceto("0"),flagIdx);
                                           crearTercetoSimple("MENSAJE","@mensajeNoEncontrado",CteString);//Elemnto no encontrado
                                           crearTerceto("FIN_IF");
                                     }
@@ -86,9 +86,7 @@ posicion : POSICION PARA ID PYC CA  {
                                           posicionIdx=crearTerceto($3);
                                     }
             lista CC PARC
-                              {
-                                    posicionIdx=listaIdx;
-                              }
+            
       | POSICION PARA ID PYC CA CC PARC
                               {
                                     posicionIdx=-1;
@@ -98,13 +96,12 @@ lista : CTE             {
                               agregarCteATabla(Cte);cont++;
                               flagIdx = crearTerceto("_flag");
                               crearTercetoIdx("=",flagIdx,crearTerceto("0"));//Flag 
-                              crearTercetoIdx("=",crearTerceto("_cont"),crearTerceto("1"));//cont
                               posIdx=crearTercetoIdx("=",crearTerceto("_posf"),crearTerceto("0"));//posicion encontrada del elemento
                               sprintf(str_aux,"%d",$1);
                               crearTercetoIdx("BNE",crearTerceto(str_aux),posicionIdx);
                               listaIdx=crearTerceto("_posf");
-                              crearTercetoIdx("=",listaIdx,crearTerceto("1"));//posicion Encontrado 
                               crearTercetoIdx("=",flagIdx,crearTerceto("1"));//Flag Encontrado 
+                              crearTercetoIdx("=",listaIdx,crearTerceto("1"));//posicion Encontrado 
                               crearTerceto("FIN_IF");
                         }
       | lista COMA CTE  {

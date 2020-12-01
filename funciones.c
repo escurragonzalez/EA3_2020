@@ -283,8 +283,7 @@ void generarAsm(){
 	//Auxiliares
 	insertarEnTabla(0);
 	insertarEnTabla(1);
-	agregarEnTabla("_posf",0);
-	agregarEnTabla("_cont",0);
+	agregarEnTabla("_posf",0);	
 	agregarEnTabla("_flag",0);	
 	FILE *pf = fopen("Final.asm", "w+");
 	if (!pf){
@@ -300,10 +299,10 @@ void generarAsm(){
 	for (i = 0; i <= indice_tabla; i++){
 		switch (tabla_simbolo[i].tipo_dato){
 			case Int:
-				fprintf(pf, "\t@%s \tDW 0\n",tabla_simbolo[i].nombre);
+				fprintf(pf, "\t@%s \tDD 0\n",tabla_simbolo[i].nombre);
 				break;
 			case Cte:
-				fprintf(pf,"\t@%s \tDW %d\n",tabla_simbolo[i].nombre,tabla_simbolo[i].valor_i);
+				fprintf(pf,"\t@%s \tDD %d\n",tabla_simbolo[i].nombre,tabla_simbolo[i].valor_i);
 				break;
 			default:
 				break;
@@ -321,7 +320,8 @@ void generarAsm(){
 
 	fprintf(pf,"\n.CODE\n.startup\n\tmov AX,@DATA\n\tmov DS,AX\n\n\tFINIT\n");
 	recorrerTercetos(pf);
-
+	
+	fprintf(pf,"\tffree\n");
 	fprintf(pf,"\tmov ah, 4ch\n\tint 21h\n\n");
 
 	//Fin archivo
@@ -359,6 +359,7 @@ void recorrerTercetos(FILE *pf){
 
 		//READ
 		if(strcmp(nodo,"READ")==0){
+			
 			fprintf(pf,"\tGetInteger \t@_%s\n",tercetos[i].dos);
 			fprintf(pf,"\tfild \t@_0\n");
 			fprintf(pf,"\tfild \t@_%s\n",tercetos[i].dos);
@@ -367,19 +368,21 @@ void recorrerTercetos(FILE *pf){
 			fprintf(pf,"\tBLOQ%d: \n",ccond);
 			fprintf(pf,"\tdisplayString \t @mensajeValidacion\n");
 			fprintf(pf,"\tmov ah, 4ch\n\tint 21h\n\n");
+			fprintf(pf,"\tffree\n");
 			fprintf(pf,"\tFIN_IF%d: \n",ccond);
 			ccond++;
 		}
 
 		//Asignacion 
 		if(strcmp(nodo,"=")==0 ){
-			fprintf(pf,"\tffree\n");
+			fprintf(pf,"\tffree\n");			
 			sprintf(aux_str,"%s",tercetos[atoi(tercetos[i].tres)].uno);
 			fprintf(pf,"\tfild \t@_%s\n",aux_str);
 			fprintf(pf,"\tfistp \t@_%s\n",tercetos[atoi(tercetos[i].dos)].uno);
 		}
 
 		if(strcmp(nodo,"BNE")==0 ){
+			fprintf(pf,"\tffree\n");
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].dos)].uno);
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].tres)].uno);
 			fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tjne\t\t");
@@ -387,6 +390,7 @@ void recorrerTercetos(FILE *pf){
 		}
 
 		if(strcmp(nodo,"BEQ")==0 ){
+			fprintf(pf,"\tffree\n");
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].dos)].uno);
 			fprintf(pf,"\tfild \t@_%s\n", tercetos[atoi(tercetos[i].tres)].uno);
 			fprintf(pf,"\tfcomp\n\tfstsw\tax\n\tfwait\n\tsahf\n\tje\t\t");
@@ -399,7 +403,7 @@ void recorrerTercetos(FILE *pf){
 		}
 
 		if(strcmp(nodo,"MENSAJE")==0){
-			fprintf(pf,"\tdisplayString \t %s\n",tercetos[i].dos);
+			fprintf(pf,"\n\tdisplayString \t %s\n",tercetos[i].dos);
 		}
 	}
 }

@@ -3,3 +3,12 @@ READ pivot
 resul = posicion ( pivot ; [3,5,4,33,7,12,4,5] )
 WRITE "Elemento encontrado en posicion: "
 WRITE resul
+
+WRITE "Ingrese un valor pivot mayor o igual a 1: "
+READ pivot2
+resul2 = posicion ( pivot2 ; [5,5,5,5,5,5,5] )
+WRITE "Elemento encontrado en posicion: "
+WRITE resul2
+
+WRITE "Lista vacia: "
+resul = posicion ( pivot ; [] )

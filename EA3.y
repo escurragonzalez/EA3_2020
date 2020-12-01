@@ -114,8 +114,7 @@ lista : CTE             {
                               sprintf(str_aux,"%d",cont);
                               insertarEnTabla(cont);
                               crearTercetoIdx("=",listaIdx,crearTerceto(str_aux));//posicion Encontrado 
-                              crearTerceto("FIN_IF");
-                              crearTerceto("FIN_IF");
+                              crearTerceto("FIN_IF");                              
                         }
 
 write : WRITE CTE_S     {
